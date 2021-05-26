@@ -18,7 +18,7 @@ ENV _FLARUM_DIR=/flarum/app \
     DB_WAIT=false \
     FLARUM_TITLE=Docker-Flarum \
     DEBUG=false \
-    LOG_TO_STDOUT=false \
+    LOG_OUTPUT=file \
     GITHUB_TOKEN_AUTH=false \
     FLARUM_PORT=8888
 
@@ -59,14 +59,16 @@ RUN apk add --no-progress --no-cache \
   && curl -L --progress-bar https://github.com/xxxxxliil/db-live-test/releases/download/0.0.1/db-live-test.php -o /usr/local/bin/db-live-test \
   && sed -i 's/memory_limit = .*/memory_limit = ${PHP_MEMORY_LIMIT}/' /etc/php8/php.ini \
   && chmod +x /usr/local/bin/composer \
-  && mkdir -p /run/php /flarum/app \
+  && mkdir -p /flarum/app /run/php /var/log/flarum \
   && COMPOSER_CACHE_DIR="/tmp" composer create-project flarum/flarum:$VERSION /flarum/app \
   && composer clear-cache \
-  && rm -rf /flarum/.composer /tmp/* \
+  && rm -rf /flarum/.composer /tmp/* /flarum/app/storage/logs \
+  && cd /flarum/app/storage/ \
+  && ln -s /var/log/flarum logs \
   && setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
 
 COPY rootfs /
 RUN chmod +x /usr/local/bin/* /etc/s6.d/*/run /etc/s6.d/.s6-svscan/*
-VOLUME /etc/nginx/flarum /flarum/app/extensions /flarum/app/public/assets /flarum/app/storage/logs
+VOLUME /etc/nginx/flarum /flarum/app/extensions /flarum/app/public/assets /var/log
 WORKDIR $_FLARUM_DIR
 CMD ["/usr/local/bin/startup"]
