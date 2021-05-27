@@ -19,6 +19,13 @@ test_empty_or_only_spaces(){
   esac
 }
 
+# Currently only flarum_start_pre hook point
+CUSTOM_STARTUP_SCRIPT="${_FLARUM_DIR}/storage/custom-startup.sh"
+[ -r "${CUSTOM_STARTUP_SCRIPT}" ] && . "${CUSTOM_STARTUP_SCRIPT}"
+_check_and_run(){
+  type -t "${1}" >/dev/null && "${1}"
+}
+
 # Required env variables
 if test_empty_var "${DB_PASS}"; then
   echo "[ERROR] Mariadb database password must be set !"
@@ -164,5 +171,6 @@ fi
 
 
 
+_check_and_run flarum_start_pre
 echo "[INFO] End of startup script. Forum is starting."
 exec su-exec "${UID}:${GID}" /bin/s6-svscan /etc/s6.d
