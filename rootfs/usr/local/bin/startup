@@ -192,14 +192,17 @@ else
          -e "s|<FLARUM_TITLE>|${FLARUM_TITLE}|g" ${_FLARUM_DIR}/config.yml
 
   # Install flarum
-  su-exec "${UID}:${GID}" php ${_FLARUM_DIR}/flarum install --file=${_FLARUM_DIR}/config.yml \
-  && touch ${_FLARUM_DIR}/public/assets/._flarum-installed.lock
-
-  echo "[INFO] End of flarum installation"
+  if su-exec "${UID}:${GID}" php ${_FLARUM_DIR}/flarum install --file=/flarum/app/config.yml; then
+    touch /flarum/app/public/assets/._flarum-installed.lock
+    echo "[INFO] End of flarum installation"
+  else
+    echo "[ERROR] The flarum installation fails, Now exit!"
+    exit 75
+  fi
 fi
 
 
 
 _check_and_run flarum_start_pre
-echo "[INFO] End of startup script. Forum is starting."
+echo "[INFO] End of startup script. Forum is starting..."
 exec su-exec "${UID}:${GID}" /bin/s6-svscan /etc/s6.d
